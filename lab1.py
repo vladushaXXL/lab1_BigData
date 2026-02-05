@@ -97,3 +97,66 @@ def download_data_concurrently(dates):
                 print(f"Обработано: {completed}/{total_dates} дат")
     
     return data
+
+def save_to_csv(data, filename='krw_exchange_rates.csv'):
+    """Сохраняет данные в CSV файл"""
+    if not data:
+        print("Нет данных для сохранения")
+        return
+    
+    data.sort(key=lambda x: x['date'])
+    
+    with open(filename, 'w', newline='', encoding='utf-8-sig') as f:
+        writer = csv.writer(f)
+        writer.writerow(['date', 'rate'])
+        for item in data:
+            writer.writerow([item['date'], item['rate']])
+    
+    print(f"Данные сохранены в файл: {filename}")
+    print(f"Период: с {data[0]['date']} по {data[-1]['date']}")
+
+
+def print_statistics(data, execution_time):
+    """Выводит статистику выполнения"""
+    if data:
+        print(f"\n=== СТАТИСТИКА ===")
+        print(f"Загружено записей: {len(data)}")
+        print(f"Общее время выполнения: {execution_time:.2f} секунд")
+        print(f"Среднее время на запрос: {execution_time/len(data):.2f} секунд")
+        
+        # Дополнительная статистика по курсам
+        rates = [item['rate'] for item in data]
+        print(f"Минимальный курс: {min(rates):.6f}")
+        print(f"Максимальный курс: {max(rates):.6f}")
+        print(f"Средний курс: {sum(rates)/len(rates):.6f}")
+    else:
+        print("Нет данных для отображения статистики")
+
+
+def main():
+    """Основная функция"""
+    print("Начинаю загрузку курсов корейских вон (KRW)...")
+    
+    # Генерация дат
+    dates = generate_date_range(START_DATE, END_DATE)
+    print(f"Всего дат для обработки: {len(dates)}")
+    print(f"Период: с {START_DATE.strftime(DATE_FORMAT_OUTPUT)} по {END_DATE.strftime(DATE_FORMAT_OUTPUT)}")
+    
+    # Засекаем время
+    start_time = time.time()
+    
+    # Загрузка данных
+    data = download_data_concurrently(dates)
+    
+    end_time = time.time()
+    execution_time = end_time - start_time
+    
+    # Сохранение данных
+    save_to_csv(data)
+    
+    # Вывод статистики
+    print_statistics(data, execution_time)
+
+
+if __name__ == "__main__":
+    main()
